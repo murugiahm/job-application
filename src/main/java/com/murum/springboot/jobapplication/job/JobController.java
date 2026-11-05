@@ -1,5 +1,7 @@
 package com.murum.springboot.jobapplication.job;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -29,29 +31,32 @@ public class JobController {
     Long jobId = 0L;
 
     @PostMapping("/jobs")
-    public String create(@RequestBody Job job){
+    public ResponseEntity<Job> create(@RequestBody Job job){
         job.setId(++jobId);
         jobs.add(job);
-        return "job created successfully";
+        return ResponseEntity.status(HttpStatus.CREATED).body(job);
     }
 
     @GetMapping("/jobs")
-    public List<Job> findAll(){
-        return jobs;
+    public ResponseEntity<List<Job>> findAll(){
+        if(jobs.isEmpty()){
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(jobs);
     }
 
     @GetMapping("jobs/{id}")
-    public Job findById(@PathVariable Long id){
+    public ResponseEntity<Job> findById(@PathVariable Long id){
         for (Job job : jobs) {
             if (job.getId().equals(id)) {
-                return job;
+                return ResponseEntity.ok(job);
             }
         }
-        return null;
+        return ResponseEntity.notFound().build();
     }
 
     @PutMapping("/jobs/{id}")
-    public String update(@PathVariable Long id, @RequestBody Job updatedJob){
+    public ResponseEntity<Job> update(@PathVariable Long id, @RequestBody Job updatedJob){
         for(Job job: jobs){
             if(job.getId().equals(id)){
                 job.setTitle(updatedJob.getTitle());
@@ -59,19 +64,21 @@ public class JobController {
                 job.setLocation(updatedJob.getLocation());
                 job.setMinSalary(updatedJob.getMinSalary());
                 job.setMaxSalary(updatedJob.getMaxSalary());
-                return "job updated successfully";
+                return ResponseEntity.ok(job);
+                //job updated successfully";
             }
         }
-        return "NO job found";
+       // return "NO job found";
+        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/jobs/{id}")
-    public String delete(@PathVariable Long id){
+    public ResponseEntity<String> delete(@PathVariable Long id){
         boolean isRemoved = jobs.removeIf(job -> job.getId().equals(id));
             if(isRemoved){
-                return "job deleted successfully";
+                return ResponseEntity.ok("job deleted successfully");
             }
-        return "NO job found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("NO job found");
     }
 
 
