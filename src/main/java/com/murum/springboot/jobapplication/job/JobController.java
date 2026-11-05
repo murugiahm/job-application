@@ -26,9 +26,11 @@ import java.util.List;
 public class JobController {
 
     List<Job> jobs = new ArrayList<>();
+    Long jobId = 0L;
 
     @PostMapping("/jobs")
     public String create(@RequestBody Job job){
+        job.setId(++jobId);
         jobs.add(job);
         return "job created successfully";
     }
@@ -47,6 +49,31 @@ public class JobController {
         }
         return null;
     }
+
+    @PutMapping("/jobs/{id}")
+    public String update(@PathVariable Long id, @RequestBody Job updatedJob){
+        for(Job job: jobs){
+            if(job.getId().equals(id)){
+                job.setTitle(updatedJob.getTitle());
+                job.setDescription(updatedJob.getDescription());
+                job.setLocation(updatedJob.getLocation());
+                job.setMinSalary(updatedJob.getMinSalary());
+                job.setMaxSalary(updatedJob.getMaxSalary());
+                return "job updated successfully";
+            }
+        }
+        return "NO job found";
+    }
+
+    @DeleteMapping("/jobs/{id}")
+    public String delete(@PathVariable Long id){
+        boolean isRemoved = jobs.removeIf(job -> job.getId().equals(id));
+            if(isRemoved){
+                return "job deleted successfully";
+            }
+        return "NO job found";
+    }
+
 
 }
 
