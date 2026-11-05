@@ -1,5 +1,7 @@
 package com.murum.springboot.jobapplication.job;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -33,39 +35,42 @@ public class JobController {
     }
 
     @PostMapping("/jobs")
-    public String createJob(@RequestBody Job job){
-        jobService.create(job);
-        return "job created successfully";
+
+    public ResponseEntity<Job> createJob(@RequestBody Job job){
+        Job createdJo = jobService.create(job);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdJo);
     }
 
     @GetMapping("/jobs")
-    public List<Job> getAllJobs(){
-        return jobService.getAll();
+    public ResponseEntity<List<Job>> getAllJobs(){
+        List<Job> jobs = jobService.getAll();
+        if(jobs.isEmpty()){
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(jobs);
     }
 
     @GetMapping("jobs/{id}")
-    public Job getJobById(@PathVariable Long id){
-        Optional<Job> job = jobService.getById(id);
-        return job.orElse(null);
+    public ResponseEntity<Job>  getJobById(@PathVariable Long id){
+       return jobService.getById(id)
+                .map(job -> ResponseEntity.ok(job))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/jobs/{id}")
-    public String updateJob(@PathVariable Long id, @RequestBody Job updatedJob){
-        Optional<Job> job = jobService.update(id, updatedJob);
-
-        if(job.isEmpty()){
-            return "NO job found";
-        }
-        return "job updated successfully";
+    public ResponseEntity<Job> updateJob(@PathVariable Long id, @RequestBody Job updatedJob){
+        return jobService.update(id, updatedJob)
+                .map(job -> ResponseEntity.ok(job))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/jobs/{id}")
-    public String deleteJob(@PathVariable Long id){
+    public ResponseEntity<String> deleteJob(@PathVariable Long id){
         boolean isRemoved = jobService.delete(id);
             if(isRemoved){
-                return "job deleted successfully";
+                return ResponseEntity.ok("job deleted successfully");
             }
-        return "NO job found";
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("NO job found");
     }
 
 
