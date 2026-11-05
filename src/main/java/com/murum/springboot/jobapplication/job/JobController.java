@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /*
  *  GET /jobs               :   Get all jobs
@@ -25,49 +26,42 @@ import java.util.List;
 @RestController
 public class JobController {
 
-    List<Job> jobs = new ArrayList<>();
-    Long jobId = 0L;
+    private final JobService jobService;
+
+    public JobController(JobService jobService){
+        this.jobService = jobService;
+    }
 
     @PostMapping("/jobs")
-    public String create(@RequestBody Job job){
-        job.setId(++jobId);
-        jobs.add(job);
+    public String createJob(@RequestBody Job job){
+        jobService.create(job);
         return "job created successfully";
     }
 
     @GetMapping("/jobs")
-    public List<Job> findAll(){
-        return jobs;
+    public List<Job> getAllJobs(){
+        return jobService.getAll();
     }
 
     @GetMapping("jobs/{id}")
-    public Job findById(@PathVariable Long id){
-        for (Job job : jobs) {
-            if (job.getId().equals(id)) {
-                return job;
-            }
-        }
-        return null;
+    public Job getJobById(@PathVariable Long id){
+        Optional<Job> job = jobService.getById(id);
+        return job.orElse(null);
     }
 
     @PutMapping("/jobs/{id}")
-    public String update(@PathVariable Long id, @RequestBody Job updatedJob){
-        for(Job job: jobs){
-            if(job.getId().equals(id)){
-                job.setTitle(updatedJob.getTitle());
-                job.setDescription(updatedJob.getDescription());
-                job.setLocation(updatedJob.getLocation());
-                job.setMinSalary(updatedJob.getMinSalary());
-                job.setMaxSalary(updatedJob.getMaxSalary());
-                return "job updated successfully";
-            }
+    public String updateJob(@PathVariable Long id, @RequestBody Job updatedJob){
+        Optional<Job> job = jobService.update(id, updatedJob);
+
+        if(job.isEmpty()){
+            return "NO job found";
         }
-        return "NO job found";
+        return "job updated successfully";
     }
 
     @DeleteMapping("/jobs/{id}")
-    public String delete(@PathVariable Long id){
-        boolean isRemoved = jobs.removeIf(job -> job.getId().equals(id));
+    public String deleteJob(@PathVariable Long id){
+        boolean isRemoved = jobService.delete(id);
             if(isRemoved){
                 return "job deleted successfully";
             }
